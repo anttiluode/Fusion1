@@ -270,7 +270,8 @@ def main() -> None:
     print("positive percentage = policy beats make")
     for label, key in [("risk", "risk_vs_make_pct"), ("probe", "probe_vs_make_pct")]:
         print(f"\n{label} vs make")
-        print(f"{'C_wrong \\ hazard':>16} | " + " | ".join(f"{h:>8}" for h in hazards))
+        header = "C_wrong \\ hazard"
+        print(f"{header:>16} | " + " | ".join(f"{h:>8}" for h in hazards))
         print("-" * 72)
         for c_wrong in wrong_costs:
             vals = [grid[(c_wrong, h)][key] for h in hazards]
