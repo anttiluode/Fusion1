@@ -57,6 +57,7 @@ No runtime dependencies are required beyond Python 3.10+.
 ```bash
 python -m unittest discover -s tests -v
 python -m fusion1.benchmark
+python experiments/gate0_make_reconciled.py
 python examples/workflow_demo.py
 ```
 
@@ -88,6 +89,50 @@ The controls matter more than the headline savings:
 3. **In-flight state:** `WAIT` prevents duplicate work when the result is already coming.
 
 The next benchmark must replace synthetic cost units with actual wall-clock time, model/tool calls, or money on a real workflow.
+
+## Stronger Gate 0: `make` is the baseline
+
+The first benchmark above is a runtime sanity check, not the strongest attacker.
+
+Claude independently built a better Gate 0 around the baseline Fusion1 actually has to face: ordinary dependency invalidation. If exact dependency versions are available cheaply, Fusion should not pretend to beat `make`.
+
+That attack also exposed a useful correction. The first bundled comparison tested:
+
+```text
+risk
+vs
+risk + PROBE + WAIT
+```
+
+so it could not tell which extra mechanism helped or hurt. An explicit ablation showed PROBE helping while WAIT dominated the loss in the immediate-demand world.
+
+`experiments/gate0_make_reconciled.py` therefore tests only:
+
+```text
+make
+risk
+probe
+```
+
+with matched refresh costs, exact treatment of observable sources, the correct discrete hazard law, and a full expected-cost rule for probing.
+
+Representative local Gate 0c result, positive = beats `make`:
+
+```text
+PROBE vs make
+
+C_wrong \ hazard |    .002 |     .01 |     .05 |      .2 |      .6
+-----------------+---------+---------+---------+---------+---------
+               2 |   +55.2 |   +51.3 |   +49.2 |   +48.9 |   +48.8
+               8 |   +49.2 |   +33.7 |   +25.5 |   +24.0 |   +23.8
+              25 |   +45.9 |   +37.2 |   +26.1 |   +10.6 |    +0.0
+              60 |   +48.0 |   +43.1 |   +28.4 |   +10.4 |    +0.0
+             200 |   +50.0 |   +40.5 |   +26.5 |   +10.4 |    +0.0
+```
+
+This is still a synthetic perfect-probe result. It says only that PROBE has a coherent value-of-information regime. **WAIT is quarantined rather than killed** until a benchmark gives every policy the same real asynchronous latency and some deadline slack.
+
+See [`docs/GATE0_MAKE_RECONCILIATION.md`](docs/GATE0_MAKE_RECONCILIATION.md).
 
 ## Minimal API
 
